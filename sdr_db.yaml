@@ -13,3 +13,8 @@
   user: |
     Muthaias
 
+- !ruby/object:BugTracker::Bug 
+  description: determine wether comments are needed or not
+  id: 3
+  status: todo
+  user: Muthaias
