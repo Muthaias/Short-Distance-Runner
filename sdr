@@ -1,0 +1,4 @@
+#!/bin/bash
+sdr_path=`dirname $0`
+sdr_path="$sdr_path/sdrbts.rb"
+ruby "$sdr_path" "$@"

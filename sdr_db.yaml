@@ -1,0 +1,15 @@
+--- 
+- !ruby/object:BugTracker::Bug 
+  description: merging will cause the bug enumeration to break
+  id: 1
+  status: bug
+  user: |
+    Mattias Nyberg
+
+- !ruby/object:BugTracker::Bug 
+  description: needs better structure
+  id: 2
+  status: todo
+  user: |
+    Mattias Nyberg
+
