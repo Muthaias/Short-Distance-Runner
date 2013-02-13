@@ -7,6 +7,25 @@
 
 require "yaml"
 
+############################################################
+# Definitions
+############################################################
+
+# Standard way to print a bug
+def bug_print(bug)
+	puts "bug[#{bug.id}|#{bug.status}]: #{bug.description}"
+end
+
+# Make a safe string comparision
+def safecmp(str1, str2)
+	if(str1 == nil or str2 == nil)
+		return false
+	elsif(str1.casecmp(str2) == 0)
+		return true;
+	end
+end
+
+# Parse options from command line
 def parse_opts(opts, argv)
 	was_found = false
 	opts.each do |cmd, act|
@@ -24,6 +43,7 @@ def parse_opts(opts, argv)
 	end
 end
 
+# Parse commands from command line
 def parse_cmds(commands, argv)
 	if(argv[0] == nil)
 		return
@@ -46,12 +66,14 @@ def parse_cmds(commands, argv)
 	end
 end
 
+# Creates a new local user
 def make_user(username)
 	File.open(".sdr_usr", "w") do |f|
 		f.write(username)
 	end
 end
 
+# Search for a database, traversing the file hierachy upwards
 def get_db_path(db_base)
 	# Look for database file in previous directories
 	pwd = Dir.pwd
@@ -132,7 +154,7 @@ def detect_user()
 	return user
 end
 
-
+# The actual bug tracker class
 class BugTracker
 	attr_reader :bugs, :user
 
@@ -227,6 +249,7 @@ class BugTracker
 		end
 	end
 
+	# The bug class
 	class Bug
 		attr_accessor :user, :description, :id, :status
 
@@ -237,21 +260,12 @@ class BugTracker
 			@status = status
 		end
 	end
-end
+end #BugTracker
 
 
-def bug_print(bug)
-	puts "bug[#{bug.id}|#{bug.status}]: #{bug.description}"
-end
-
-def safecmp(str1, str2)
-	if(str1 == nil or str2 == nil)
-		return false
-	elsif(str1.casecmp(str2) == 0)
-		return true;
-	end
-end
-
+############################################################
+# Main application execution
+############################################################
 
 # Setup default values
 usr = detect_user()
