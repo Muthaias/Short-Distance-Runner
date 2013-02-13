@@ -3,11 +3,9 @@
 # The main goal is to simplify bug tracking tasks by only using requireing the most basic
 # data in order to create a ticket.
 #
-# Author: Mattias Nyberg
+# Author: Muthaias
 
 require "yaml"
-
-#module SDRBase
 
 def parse_opts(opts, argv)
 	was_found = false
@@ -133,8 +131,6 @@ def detect_user()
 
 	return user
 end
-
-#end # SDRBase
 
 
 class BugTracker
@@ -305,7 +301,6 @@ cmds["mkusr:1"] = lambda do |usr|
 	make_user(usr)
 end
 cmds["user:0"] = lambda do
-	puts "Current user: #{usr}"
+	puts usr
 end
-
 parse_cmds(cmds, ARGV)

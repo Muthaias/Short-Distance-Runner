@@ -4,12 +4,12 @@
   id: 1
   status: bug
   user: |
-    Mattias Nyberg
+    Muthaias
 
 - !ruby/object:BugTracker::Bug 
   description: needs better structure
   id: 2
   status: todo
   user: |
-    Mattias Nyberg
+    Muthaias
 
