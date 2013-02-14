@@ -18,3 +18,8 @@
   id: 3
   status: todo
   user: Muthaias
+- !ruby/object:BugTracker::Bug 
+  description: needs support for optional arguments
+  id: 4
+  status: bug
+  user: Muthaias
