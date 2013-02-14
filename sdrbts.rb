@@ -7,13 +7,14 @@
 
 require "yaml"
 
+
 ############################################################
 # Definitions
 ############################################################
 
 # Standard way to print a bug
 def bug_print(bug)
-	puts "bug[#{bug.id}|#{bug.status}]: #{bug.description}"
+	puts "bug[\e[31m#{bug.id}\e[0m|\e[31m#{bug.status}\e[0m]: \e[33m#{bug.description}\e[0m"
 end
 
 # Make a safe string comparision
@@ -22,6 +23,17 @@ def safecmp(str1, str2)
 		return false
 	elsif(str1.casecmp(str2) == 0)
 		return true;
+	end
+end
+
+# Print commands
+def print_cmds(cmds)
+	cmds.each do |cmd, act|
+		(name,argc) = cmd.split(":")
+		puts "\e[31m#{name}\e[0m: Takes #{argc} parameter(s)."
+		if(act[:desc] != nil)
+			puts "  \e[33m#{act[:desc]}\e[0m"
+		end
 	end
 end
 
@@ -34,7 +46,7 @@ def parse_opts(opts, argv)
 		if(nil != i = argv.index(name))
 			argend = i + argc
 			if(argv.size > argend)
-				act.call(*argv[(i+1)..argend])
+				act[:func].call(*argv[(i+1)..argend])
 				(i..argend).each{|e| argv.delete_at(i)}
 			else
 				puts "Argument error: option \"#{argv[0]}\", requires #{argc} arguments."
@@ -55,7 +67,7 @@ def parse_cmds(commands, argv)
 		if(name.casecmp(argv[0]) == 0)
 			was_found = true
 			if(argv.size > argc.to_i)
-				act.call(*argv[1..argc.to_i])
+				act[:func].call(*argv[1..argc.to_i])
 				return
 			end
 		end
@@ -273,12 +285,18 @@ db_path = get_db_path("sdr_db.yaml")
 
 # Parse options
 opts = Hash.new()
-opts["--username:1"] = lambda do |username|
-	usr = username
-end
-opts["--dbpath:1"] = lambda do |path|
-	db_path = path
-end
+opts["--username:1"] = {
+	:func => lambda do |username|
+		usr = username
+	end,
+	:desc => "Temporarily sets the username. '--username [username]'"
+}
+opts["--dbpath:1"] = {
+	:func => lambda do |path|
+		db_path = path
+	end,
+	:desc => "Temporarily sets the database path. '--dbpath [path]'"
+}
 parse_opts(opts, ARGV)
 
 # Setup the tracker
@@ -286,35 +304,79 @@ tracker = BugTracker.new(db_path, usr)
 
 # Parse commands
 cmds = Hash.new()
-cmds["list:1"] = lambda do |type|
-	if(safecmp(type, "bugs"))
-		tracker.bugs.each() do |bug|
-			bug_print(bug)
-		end
-
-	elsif(safecmp(type, "users"))
-		tracker.users.each() do |user, bugs|
-			puts "#{user}"
-		end
-
-	elsif(safecmp(type, "mine"))
-		if(tracker.users[usr] != nil)
-			tracker.users[usr].each do |bug|
+cmds["list:1"] = {
+	:func => lambda do |type|
+		if(safecmp(type, "bugs"))
+			tracker.bugs.each() do |bug|
 				bug_print(bug)
 			end
+
+		elsif(safecmp(type, "users"))
+			tracker.users.each() do |user, bugs|
+				puts "#{user}"
+			end
+
+		elsif(safecmp(type, "mine"))
+			if(tracker.users[usr] != nil)
+				tracker.users[usr].each do |bug|
+					bug_print(bug)
+				end
+			end
 		end
-	end
-end
-cmds["add:2"] = lambda do |desc, stat|
-	tracker.add_bug(desc, stat)
-end
-cmds["stat:2"] = lambda do |id, stat|
-	tracker.set_bug_status(id.to_i, stat)
-end
-cmds["mkusr:1"] = lambda do |usr|
-	make_user(usr)
-end
-cmds["user:0"] = lambda do
-	puts usr
-end
+	end,
+	:desc => "Lists a number of properties in database. 'list [bugs|users|mine]'"
+}
+cmds["find:1"] = {
+	:func => lambda do |filter|
+		bug_list = tracker.bugs.select{|bug| bug.description.match(/.*#{filter}.*/) != nil}
+		bug_list.each do |bug|
+			bug_print(bug)
+		end
+	end,
+	:desc => "Finds and lists bugs using a filter on their description. 'find [filter]'"
+}
+cmds["fstat:1"] = {
+	:func => lambda do |filter|
+		bug_list = tracker.bugs.select{|bug| bug.status.match(/.*#{filter}.*/) != nil}
+		bug_list.each do |bug|
+			bug_print(bug)
+		end
+	end,
+	:desc => "Finds and lists bugs using a filter on their status. 'fstat [filter]'"
+}
+cmds["add:2"] = {
+	:func => lambda do |desc, stat|
+		tracker.add_bug(desc, stat)
+	end,
+	:desc => "Adds a new bug. 'add [description] [status]'"
+}
+cmds["stat:2"] = {
+	:func => lambda do |id, stat|
+		tracker.set_bug_status(id.to_i, stat)
+	end,
+	:desc => "Sets status of a specified bug. 'stat [bug_id] [status]'"
+}
+cmds["mkusr:1"] = {
+	:func => lambda do |usr|
+		make_user(usr)
+	end,
+	:desc => "Adds a local SDR user file. 'mkusr [username]'"
+}
+cmds["user:0"] = {
+	:func => lambda do
+		puts usr
+	end,
+	:desc => "Show the current username. 'user'"
+}
+cmds["help:0"] = {
+	:func => lambda do
+		puts "Usage: [command] [arguments] [options]"
+		puts "Command description:"
+		print_cmds(cmds)
+		puts ""
+		puts "Option description:"
+		print_cmds(opts)
+	end,
+	:desc => "Displays this message. 'user'"
+}
 parse_cmds(cmds, ARGV)
