@@ -271,6 +271,10 @@ class BugTracker
 			@id = id
 			@status = status
 		end
+
+		def to_yaml_style
+			:inline
+		end
 	end
 end #BugTracker
 

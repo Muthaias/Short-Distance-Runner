@@ -1,25 +1,6 @@
 --- 
-- !ruby/object:BugTracker::Bug 
-  description: merging will cause the bug enumeration to break
-  id: 1
-  status: bug
-  user: |
-    Muthaias
-
-- !ruby/object:BugTracker::Bug 
-  description: needs better structure
-  id: 2
-  status: todo
-  user: |
-    Muthaias
-
-- !ruby/object:BugTracker::Bug 
-  description: determine wether comments are needed or not
-  id: 3
-  status: todo
-  user: Muthaias
-- !ruby/object:BugTracker::Bug 
-  description: needs support for optional arguments
-  id: 4
-  status: bug
-  user: Muthaias
+- !ruby/object:BugTracker::Bug {description: merging will cause the bug enumeration to break, id: 1, status: bug, user: Muthaias}
+- !ruby/object:BugTracker::Bug {description: needs better structure, id: 2, status: todo, user: Muthaias}
+- !ruby/object:BugTracker::Bug {description: determine wether comments are needed or not, id: 3, status: todo, user: Muthaias}
+- !ruby/object:BugTracker::Bug {description: needs support for optional arguments, id: 4, status: bug, user: Muthaias}
+- !ruby/object:BugTracker::Bug {description: want inline format for yaml, id: 5, status: todo, user: Muthaias}
