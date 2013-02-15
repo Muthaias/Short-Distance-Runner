@@ -3,5 +3,5 @@
 - {:status: todo, :description: needs better structure, :user: Muthaias, :id: 2}
 - {:status: todo, :description: determine wether comments are needed or not, :user: Muthaias, :id: 3}
 - {:status: bug, :description: needs support for optional arguments, :user: Muthaias, :id: 4}
-- {:status: todo, :description: want inline format for yaml, :user: Muthaias, :id: 5}
-- {:status: bug, :description: should eliminate ruby object residue from db format, :user: Muthaias, :id: 6}
+- {:status: done, :description: want inline format for yaml, :user: Muthaias, :id: 5}
+- {:status: done, :description: should eliminate ruby object residue from db format, :user: Muthaias, :id: 6}
