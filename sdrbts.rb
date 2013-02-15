@@ -12,71 +12,66 @@ require "yaml"
 # Definitions
 ############################################################
 
-# Standard way to print a bug
-def bug_print(bug)
-	puts "bug[\e[31m#{bug.id}\e[0m|\e[31m#{bug.status}\e[0m]: \e[33m#{bug.description}\e[0m"
-end
-
-# Make a safe string comparision
-def safecmp(str1, str2)
-	if(str1 == nil or str2 == nil)
-		return false
-	elsif(str1.casecmp(str2) == 0)
-		return true;
+# Use inline style for hash
+class Hash
+	def to_yaml_style
+		:inline
 	end
 end
 
-# Print commands
-def print_cmds(cmds)
-	cmds.each do |cmd, act|
-		(name,argc) = cmd.split(":")
-		puts "\e[31m#{name}\e[0m: Takes #{argc} parameter(s)."
-		if(act[:desc] != nil)
-			puts "  \e[33m#{act[:desc]}\e[0m"
-		end
-	end
-end
-
-# Parse options from command line
-def parse_opts(opts, argv)
-	was_found = false
-	opts.each do |cmd, act|
-		(name,argc) = cmd.split(":")
-		argc = argc.to_i
-		if(nil != i = argv.index(name))
-			argend = i + argc
-			if(argv.size > argend)
-				act[:func].call(*argv[(i+1)..argend])
-				(i..argend).each{|e| argv.delete_at(i)}
-			else
-				puts "Argument error: option \"#{argv[0]}\", requires #{argc} arguments."
-			end
-		end
-	end
-end
-
-# Parse commands from command line
-def parse_cmds(commands, argv)
-	if(argv[0] == nil)
-		return
-	end
-
-	was_found = false
-	commands.each do |cmd, act|
-		(name,argc) = cmd.split(":")
-		if(name.casecmp(argv[0]) == 0)
-			was_found = true
-			if(argv.size > argc.to_i)
-				act[:func].call(*argv[1..argc.to_i])
-				return
+module AppBase
+	# Print commands
+	def self.print_cmds(cmds)
+		cmds.each do |cmd, act|
+			(name,argc) = cmd.split(":")
+			puts "\e[31m#{name}\e[0m: Takes #{argc} parameter(s)."
+			if(act[:desc] != nil)
+				puts "  \e[33m#{act[:desc]}\e[0m"
 			end
 		end
 	end
 
-	if(was_found)
-		puts "Argument error: command #{argv[0]}"
+	# Parse options from command line
+	def self.parse_opts(opts, argv)
+		was_found = false
+		opts.each do |cmd, act|
+			(name,argc) = cmd.split(":")
+			argc = argc.to_i
+			if(nil != i = argv.index(name))
+				argend = i + argc
+				if(argv.size > argend)
+					act[:func].call(*argv[(i+1)..argend])
+					(i..argend).each{|e| argv.delete_at(i)}
+				else
+					puts "Argument error: option \"#{argv[0]}\", requires #{argc} arguments."
+				end
+			end
+		end
 	end
-end
+
+	# Parse commands from command line
+	def self.parse_cmds(commands, argv)
+		if(argv[0] == nil)
+			return
+		end
+
+		was_found = false
+		commands.each do |cmd, act|
+			(name,argc) = cmd.split(":")
+			if(name.casecmp(argv[0]) == 0)
+				was_found = true
+				if(argv.size > argc.to_i)
+					act[:func].call(*argv[1..argc.to_i])
+					return
+				end
+			end
+		end
+
+		if(was_found)
+			puts "Argument error: command #{argv[0]}"
+		end
+	end
+end # AppBase
 
 # Creates a new local user
 def make_user(username)
@@ -112,6 +107,20 @@ def get_db_path(db_base)
 
 	# Return base path
 	return db_base
+end
+
+# Standard way to print a bug
+def bug_print(bug)
+	puts "bug[\e[31m#{bug[:id]}\e[0m|\e[31m#{bug[:status]}\e[0m]: \e[33m#{bug[:description]}\e[0m"
+end
+
+# Make a safe string comparision
+def safecmp(str1, str2)
+	if(str1 == nil or str2 == nil)
+		return false
+	elsif(str1.casecmp(str2) == 0)
+		return true;
+	end
 end
 
 # Gets the current user using information from svn
@@ -181,7 +190,7 @@ class BugTracker
 	# Returns the id of the bug.
 	def add_bug(description, status = "new")
 		id = get_new_bug_id()
-		bug = Bug.new(@user, description, id, status)
+		bug = new_bug(@user, description, id, status)
 		@bugs.push(bug)
 		bug_print(bug)
 		store_data()
@@ -192,8 +201,8 @@ class BugTracker
 	def get_new_bug_id()
 		id = 0
 		@bugs.each do |bug|
-			if(id < bug.id)
-				id = bug.id
+			if(id < bug[:id])
+				id = bug[:id]
 			end
 		end
 		return id + 1
@@ -201,9 +210,9 @@ class BugTracker
 
 	# Sets the status of a bug
 	def set_bug_status(id, status)
-		i = bugs.index{|bug| bug.id == id}
+		i = bugs.index{|bug| bug[:id] == id}
 		if(i != nil)
-			bugs[i].status = status
+			bugs[i][:status] = status
 			store_data()
 		else
 			puts "No bug!"
@@ -214,10 +223,10 @@ class BugTracker
 	def users
 		users = Hash.new()
 		@bugs.each do |bug|
-			if(users[bug.user] == nil)
-				users[bug.user] = Array.new()
+			if(users[bug[:user]] == nil)
+				users[bug[:user]] = Array.new()
 			end
-			users[bug.user].push(bug)
+			users[bug[:user]].push(bug)
 		end
 		return users
 	end
@@ -244,37 +253,30 @@ class BugTracker
 		lookup = Hash.new()
 		doubles = Array.new()
 		@bugs.each do |bug|
-			if(lookup[bug.id] != nil)
+			if(lookup[bug[:id]] != nil)
 				doubles.push(bug)
 			end
-			lookup[bug.id] = bug
+			lookup[bug[:id]] = bug
 		end
 
 		if(doubles.size > 0)
 			puts "Warning: Found duplicate bug IDs, new IDs were assigned"
 			base_id = get_new_bug_id()
 			doubles.each_index do |i|
-				doubles[i].id = base_id + i
+				doubles[i][:id] = base_id + i
 				bug_print(doubles[i])
 			end
 			store_data()
 		end
 	end
 
-	# The bug class
-	class Bug
-		attr_accessor :user, :description, :id, :status
-
-		def initialize(user, description, id, status)
-			@user = user
-			@description = description
-			@id = id
-			@status = status
-		end
-
-		def to_yaml_style
-			:inline
-		end
+	def new_bug(user, description, id, status)
+		{
+			:user => user,
+			:description => description,
+			:id => id,
+			:status => status
+		}
 	end
 end #BugTracker
 
@@ -301,7 +303,7 @@ opts["--dbpath:1"] = {
 	end,
 	:desc => "Temporarily sets the database path. '--dbpath [path]'"
 }
-parse_opts(opts, ARGV)
+AppBase.parse_opts(opts, ARGV)
 
 # Setup the tracker
 tracker = BugTracker.new(db_path, usr)
@@ -332,7 +334,7 @@ cmds["list:1"] = {
 }
 cmds["find:1"] = {
 	:func => lambda do |filter|
-		bug_list = tracker.bugs.select{|bug| bug.description.match(/.*#{filter}.*/) != nil}
+		bug_list = tracker.bugs.select{|bug| bug[:description].match(/.*#{filter}.*/) != nil}
 		bug_list.each do |bug|
 			bug_print(bug)
 		end
@@ -341,7 +343,7 @@ cmds["find:1"] = {
 }
 cmds["fstat:1"] = {
 	:func => lambda do |filter|
-		bug_list = tracker.bugs.select{|bug| bug.status.match(/.*#{filter}.*/) != nil}
+		bug_list = tracker.bugs.select{|bug| bug[:status].match(/.*#{filter}.*/) != nil}
 		bug_list.each do |bug|
 			bug_print(bug)
 		end
@@ -372,15 +374,21 @@ cmds["user:0"] = {
 	end,
 	:desc => "Show the current username. 'user'"
 }
+cmds["update:0"] = {
+	:func => lambda do
+		tracker.store_data()
+	end,
+	:desc => "Update the database. 'update'"
+}
 cmds["help:0"] = {
 	:func => lambda do
 		puts "Usage: [command] [arguments] [options]"
 		puts "Command description:"
-		print_cmds(cmds)
+		AppBase.print_cmds(cmds)
 		puts ""
 		puts "Option description:"
-		print_cmds(opts)
+		AppBase.print_cmds(opts)
 	end,
 	:desc => "Displays this message. 'user'"
 }
-parse_cmds(cmds, ARGV)
+AppBase.parse_cmds(cmds, ARGV)

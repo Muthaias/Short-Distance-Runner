@@ -1,6 +1,7 @@
 --- 
-- !ruby/object:BugTracker::Bug {description: merging will cause the bug enumeration to break, id: 1, status: bug, user: Muthaias}
-- !ruby/object:BugTracker::Bug {description: needs better structure, id: 2, status: todo, user: Muthaias}
-- !ruby/object:BugTracker::Bug {description: determine wether comments are needed or not, id: 3, status: todo, user: Muthaias}
-- !ruby/object:BugTracker::Bug {description: needs support for optional arguments, id: 4, status: bug, user: Muthaias}
-- !ruby/object:BugTracker::Bug {description: want inline format for yaml, id: 5, status: todo, user: Muthaias}
+- {:status: bug, :description: merging will cause the bug enumeration to break, :user: Muthaias, :id: 1}
+- {:status: todo, :description: needs better structure, :user: Muthaias, :id: 2}
+- {:status: todo, :description: determine wether comments are needed or not, :user: Muthaias, :id: 3}
+- {:status: bug, :description: needs support for optional arguments, :user: Muthaias, :id: 4}
+- {:status: todo, :description: want inline format for yaml, :user: Muthaias, :id: 5}
+- {:status: bug, :description: should eliminate ruby object residue from db format, :user: Muthaias, :id: 6}
