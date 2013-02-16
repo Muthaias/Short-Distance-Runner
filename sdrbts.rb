@@ -111,7 +111,12 @@ end
 
 # Standard way to print a bug
 def bug_print(bug)
-	puts "bug[\e[31m#{bug[:id]}\e[0m|\e[31m#{bug[:status]}\e[0m]: \e[33m#{bug[:description]}\e[0m"
+	puts "#{bug[:priority].to_i}. bug[\e[31m#{bug[:id]}\e[0m|\e[31m#{bug[:status]}\e[0m]: \e[33m#{bug[:description]}\e[0m"
+	if(bug[:notes] != nil)
+		bug[:notes].each do |note|
+			puts "  \e[31m*note:\e[0m \e[33m#{note}\e[0m"
+		end
+	end
 end
 
 # Make a safe string comparision
@@ -210,12 +215,33 @@ class BugTracker
 
 	# Sets the status of a bug
 	def set_bug_status(id, status)
+		set_bug_item(id, :status, status)
+	end
+
+	# Sets the item of a bug to value 
+	def set_bug_item(id, item, value)
 		i = bugs.index{|bug| bug[:id] == id}
 		if(i != nil)
-			bugs[i][:status] = status
+			bugs[i][item] = value
 			store_data()
+			return bugs[i]
 		else
-			puts "No bug!"
+			return nil
+		end
+	end
+
+	# Sets the item of a bug to value 
+	def push_bug_item(id, item, value)
+		i = bugs.index{|bug| bug[:id] == id}
+		if(i != nil)
+			if(bugs[i][item] == nil)
+				bugs[i][item] = Array.new()
+			end
+			bugs[i][item].push(value)
+			store_data()
+			return bugs[i]
+		else
+			return nil
 		end
 	end
 
@@ -313,7 +339,7 @@ cmds = Hash.new()
 cmds["list:1"] = {
 	:func => lambda do |type|
 		if(safecmp(type, "bugs"))
-			tracker.bugs.each() do |bug|
+			tracker.bugs.sort{|a,b| a[:priority].to_i <=> b[:priority].to_i}.each() do |bug|
 				bug_print(bug)
 			end
 
@@ -324,7 +350,7 @@ cmds["list:1"] = {
 
 		elsif(safecmp(type, "mine"))
 			if(tracker.users[usr] != nil)
-				tracker.users[usr].each do |bug|
+				tracker.users[usr].sort{|a,b| a[:priority].to_i <=> b[:priority].to_i}.each do |bug|
 					bug_print(bug)
 				end
 			end
@@ -335,7 +361,7 @@ cmds["list:1"] = {
 cmds["find:1"] = {
 	:func => lambda do |filter|
 		bug_list = tracker.bugs.select{|bug| bug[:description].match(/.*#{filter}.*/) != nil}
-		bug_list.each do |bug|
+		bug_list.sort{|a,b| a[:priority].to_i <=> b[:priority].to_i}.each do |bug|
 			bug_print(bug)
 		end
 	end,
@@ -344,7 +370,7 @@ cmds["find:1"] = {
 cmds["fstat:1"] = {
 	:func => lambda do |filter|
 		bug_list = tracker.bugs.select{|bug| bug[:status].match(/.*#{filter}.*/) != nil}
-		bug_list.each do |bug|
+		bug_list.sort{|a,b| a[:priority].to_i <=> b[:priority].to_i}.each do |bug|
 			bug_print(bug)
 		end
 	end,
@@ -389,6 +415,20 @@ cmds["help:0"] = {
 		puts "Option description:"
 		AppBase.print_cmds(opts)
 	end,
-	:desc => "Displays this message. 'user'"
+	:desc => "Displays this message. 'help'"
+}
+cmds["prio:2"] = {
+	:func => lambda do |id, prio|
+		bug = tracker.set_bug_item(id.to_i, :priority, prio.to_i)
+		bug_print(bug)
+	end,
+	:desc => "Sets bug priority. 'prio [id] [priority]'"
+}
+cmds["note:2"] = {
+	:func => lambda do |id, note|
+		bug = tracker.push_bug_item(id.to_i, :notes, note)
+		bug_print(bug)
+	end,
+	:desc => "Adds a note to a bug. 'note [id] [note]'"
 }
 AppBase.parse_cmds(cmds, ARGV)
