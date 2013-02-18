@@ -11,6 +11,8 @@ require "yaml"
 ############################################################
 # Definitions
 ############################################################
+$cfg_speak = false 
+
 
 # Use inline style for hash
 class Hash
@@ -111,10 +113,17 @@ end
 
 # Standard way to print a bug
 def bug_print(bug)
+	if(bug == nil)
+		puts "Error: No bug found"
+		return
+	end
+
 	puts "#{bug[:priority].to_i}. bug[\e[31m#{bug[:id]}\e[0m|\e[31m#{bug[:status]}\e[0m]: \e[33m#{bug[:description]}\e[0m"
+	system("say \"bug, priority #{bug[:priority].to_i}, #{bug[:description]}, status #{bug[:status]}\"") if($cfg_speak)
 	if(bug[:notes] != nil)
 		bug[:notes].each do |note|
 			puts "  \e[31m*note:\e[0m \e[33m#{note}\e[0m"
+			system("say \"note, #{note}\"") if($cfg_speak)
 		end
 	end
 end
@@ -329,6 +338,12 @@ opts["--dbpath:1"] = {
 	end,
 	:desc => "Temporarily sets the database path. '--dbpath [path]'"
 }
+opts["-speak:0"] = {
+	:func => lambda do
+		$cfg_speak = true
+	end,
+	:desc => "Makes SDR speak its bugs. '-speak'"
+}
 AppBase.parse_opts(opts, ARGV)
 
 # Setup the tracker
@@ -384,7 +399,8 @@ cmds["add:2"] = {
 }
 cmds["stat:2"] = {
 	:func => lambda do |id, stat|
-		tracker.set_bug_status(id.to_i, stat)
+		bug = tracker.set_bug_status(id.to_i, stat)
+		bug_print(bug)
 	end,
 	:desc => "Sets status of a specified bug. 'stat [bug_id] [status]'"
 }
