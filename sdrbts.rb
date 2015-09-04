@@ -365,7 +365,7 @@ cmds["list:1"] = {
 
 		elsif(safecmp(type, "mine"))
 			if(tracker.users[usr] != nil)
-				tracker.users[usr].sort{|a,b| a[:priority].to_i <=> b[:priority].to_i}.each do |bug|
+				tracker.users[usr].sort{|a,b| -a[:priority].to_i <=> -b[:priority].to_i}.each do |bug|
 					bug_print(bug)
 				end
 			end
@@ -381,6 +381,16 @@ cmds["find:1"] = {
 		end
 	end,
 	:desc => "Finds and lists bugs using a filter on their description. 'find [filter]'"
+}
+cmds["init:0"] = {
+	:func => lambda do 
+		if(!File.exists?("sdr_db.yaml"))
+			File.open("sdr_db.yaml", 'w') do |f|
+				f.write("---\n[]")
+			end
+		end
+	end,
+	:desc => "Initializes a tracking database in the current directory."
 }
 cmds["fstat:1"] = {
 	:func => lambda do |filter|
@@ -415,12 +425,6 @@ cmds["user:0"] = {
 		puts usr
 	end,
 	:desc => "Show the current username. 'user'"
-}
-cmds["update:0"] = {
-	:func => lambda do
-		tracker.store_data()
-	end,
-	:desc => "Update the database. 'update'"
 }
 cmds["help:0"] = {
 	:func => lambda do
